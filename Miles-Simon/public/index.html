@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Miles Ran</title>
+
+    <style>
+    body {
+    background-color: #d3d3d3
+    }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script>
+  </head>
+  <body>
+    <h1>Miles Ran Logging Tool</h1>
+    <p><label for="happiness">How many miles have you ran today 1-20?</label> <br>
+
+      <!-- Takes data from the user -->
+    <input type="range" id="happiness" min="1" max="20" value="5" oninput="sliderChange(this.value)">
+<output id="sliderVal"> </output> <br>
+
+<p><label for="happiness">How much happy were you? 1-10?</label> <br>
+    <!-- Takes data from the user -->
+    <input type="range" id="afterrunning" min="1" max="10" value="5" oninput="sliderChange2(this.value)">
+<output id="sliderVal2"> </output> <br>
+
+  <!-- Submit the the data -->
+    <button id="submit">submit</button>
+    </p>
+
+    <p>
+    <canvas id="chart" width="600" height="400"></canvas>
+  </p>
+
+    <script>
+
+      let myChart;
+
+
+      function sliderChange(val) {
+          document.getElementById('sliderVal').innerHTML = val;
+
+      }
+
+      function sliderChange2(val2) {
+          document.getElementById('sliderVal2').innerHTML = val2;
+
+      }
+
+
+       //activates this fucntion when submit button is clicked
+       const buttonSubmit = document.getElementById('submit');
+      buttonSubmit.addEventListener('click', async event => {
+
+//storing the values
+        const happiness = document.getElementById('happiness').value;
+        const afterrunning = document.getElementById('afterrunning').value;
+
+//sends request to server in index.js file
+        const data = {happiness, afterrunning};
+        const options = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        };
+
+
+//checking response
+const response = await fetch('/api', options);
+  const json = await response.json();
+      console.log(json);
+
+//displaying chart
+chartIt();
+      });
+
+
+//Generates charts
+
+      async function chartIt() {
+
+        let xVals = [];
+        let yVals = [];
+
+
+       // let x1Vals = [];
+        let y2Vals = [];
+
+
+//gets data1 from index.js
+        const response = await fetch('/api');
+
+//Stores in data
+        const data = await response.json();
+
+//loop in which it stores
+        for (let i = 0; i < data.length; i++){
+        xVals[i] = new Date(data[i].timestamp).toLocaleString();
+        yVals[i] = data[i].happiness;
+
+//stores data 2 values
+        y2Vals[i] = data[i].afterrunning;
+      }
+
+
+      if(!myChart){
+//displaying charts
+        const ctx = document.getElementById('chart').getContext('2d');
+        myChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+          labels: xVals,
+          datasets: [{
+            label: 'Miles ran over time',
+            data: yVals,
+            fill: false,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1},
+
+            {
+              label: 'Happiness Over Time',
+              data: y2Vals,
+              fill: false,
+              backgroundColor: 'rgba(0, 181, 204, 1)',
+              borderColor: 'rgba(0, 181, 204, 1)',
+              borderWidth: 1
+            }
+          ]
+        }
+        });
+      
+    }else{
+      
+      myChart.data.labels = xVals;
+      myChart.data.datasets[0].data = yVals;
+      myChart.data.datasets[1].data = y2Vals;
+
+
+      myChart.update();
+    }
+  }
+
+    chartIt();
+
+    </script>
+  </body>
+</html>
